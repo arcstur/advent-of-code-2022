@@ -1,14 +1,5 @@
-#![allow(unused)]
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-
-const WIN_SCORE: u32 = 6;
-const DRAW_SCORE: u32 = 3;
-const LOOSE_SCORE: u32 = 0;
-
-const ROCK_SCORE: u8 = 1;
-const PAPER_SCORE: u8 = 2;
-const SCISSORS_SCORE: u8 = 3;
 
 mod rock_paper_scissors {
     use std::cmp::Ordering;
@@ -24,32 +15,17 @@ mod rock_paper_scissors {
 
     impl PartialOrd for Play {
         fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-            match self {
-                Rock => match other {
-                    Rock => Some(Ordering::Equal),
-                    Paper => Some(Ordering::Less),
-                    Scissors => Some(Ordering::Greater),
-                },
-                Paper => match other {
-                    Rock => Some(Ordering::Greater),
-                    Paper => Some(Ordering::Equal),
-                    Scissors => Some(Ordering::Less),
-                },
-                Scissors => match other {
-                    Rock => Some(Ordering::Less),
-                    Paper => Some(Ordering::Greater),
-                    Scissors => Some(Ordering::Equal),
-                },
-            }
+            Some(self.cmp(other))
         }
     }
 
     impl Ord for Play {
         fn cmp(&self, other: &Self) -> Ordering {
-            // Dont't know how to make this better
-            // To just use Ord, it is necessary to also derive PartialOrd...
-            self.partial_cmp(other)
-                .expect("All variants are comparable")
+            match (self, other) {
+                (Rock, Paper) | (Paper, Scissors) | (Scissors, Rock) => Ordering::Less,
+                (Rock, Rock) | (Paper, Paper) | (Scissors, Scissors) => Ordering::Equal,
+                (Rock, Scissors) | (Paper, Rock) | (Scissors, Paper) => Ordering::Greater,
+            }
         }
     }
 
@@ -72,6 +48,29 @@ mod rock_paper_scissors {
             }
         }
 
+        pub fn from_outcome(outcome: Ordering, opponent: &Play) -> Play {
+            match (outcome, opponent) {
+                (Ordering::Less, Paper)
+                | (Ordering::Equal, Rock)
+                | (Ordering::Greater, Scissors) => Rock,
+                (Ordering::Less, Scissors)
+                | (Ordering::Equal, Paper)
+                | (Ordering::Greater, Rock) => Paper,
+                (Ordering::Less, Rock)
+                | (Ordering::Equal, Scissors)
+                | (Ordering::Greater, Paper) => Scissors,
+            }
+        }
+
+        pub fn from_outcome_char(letter: char, opponent: &Play) -> Option<Play> {
+            match letter {
+                'X' => Some(Play::from_outcome(Ordering::Less, opponent)),
+                'Y' => Some(Play::from_outcome(Ordering::Equal, opponent)),
+                'Z' => Some(Play::from_outcome(Ordering::Greater, opponent)),
+                _ => None,
+            }
+        }
+
         fn points_from_variant(&self) -> u64 {
             match self {
                 Rock => 1,
@@ -80,8 +79,8 @@ mod rock_paper_scissors {
             }
         }
 
-        pub fn total_points_from_play(&self, opponent_play: &Self) -> u64 {
-            let round_points = match self.cmp(opponent_play) {
+        pub fn total_points(&self, opponent: &Self) -> u64 {
+            let round_points = match self.cmp(opponent) {
                 Ordering::Less => 0,
                 Ordering::Equal => 3,
                 Ordering::Greater => 6,
@@ -103,22 +102,21 @@ fn main() {
 
     let mut points: u64 = 0;
 
+    const EXPECT_CHAR: &str = "Columns should have one character";
+    const EXPECT_VALID_CHAR: &str = "Columns should have valid characters";
+
     for line in reader.lines() {
         let line = line.expect("Input file's lines should be readable.");
 
         if !line.is_empty() {
-            let mut chars = line.chars();
+            let chars: Vec<&str> = line.split_whitespace().collect();
 
-            let opponent_play =
-                Play::from_opponent(chars.next().expect("Line should have a first character"))
-                    .expect("Line should have a valid character");
+            let opponent =
+                Play::from_opponent(chars[0].parse().expect(EXPECT_CHAR)).expect(EXPECT_VALID_CHAR);
+            let player = Play::from_outcome_char(chars[1].parse().expect(EXPECT_CHAR), &opponent)
+                .expect(EXPECT_VALID_CHAR);
 
-            let _ = chars.next();
-
-            let play = Play::from_player(chars.next().expect("Line should have a third character"))
-                .expect("Line should have a valid character");
-
-            points += play.total_points_from_play(&opponent_play);
+            points += player.total_points(&opponent);
         }
     }
 
