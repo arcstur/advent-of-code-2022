@@ -24,7 +24,7 @@ fn main() {
     let input_path = "input.txt";
     let file = File::open(input_path).expect("Input file should exist at input.txt");
     let reader = BufReader::new(file);
-    
+
     let mut elfs: Vec<Elf> = Vec::new();
     let mut sum_calories: u64 = 0;
 
@@ -34,22 +34,27 @@ fn main() {
         let line = line.expect("Input file's lines should be readable.");
 
         if !line.is_empty() {
-            let calories: u64 = line.parse().expect("Each non-empty line should contain a non-zero integer.");
+            let calories: u64 = line
+                .parse()
+                .expect("Each non-empty line should contain a non-zero integer.");
             sum_calories += calories;
         } else {
-            elfs.push( Elf::new(sum_calories) );
+            elfs.push(Elf::new(sum_calories));
             sum_calories = 0;
         }
     }
 
-    let mut max_calories_carried: u64 = 0;
+    elfs.sort_by(|elf1, elf2| elf2.calories().cmp(&elf1.calories()));
 
-    for elf in &elfs {
-        if elf.calories() > max_calories_carried {
-            max_calories_carried = elf.calories();
-        }
+    let top_qnt = 3;
+    let mut sum_calories = 0;
+
+    println!("The top {top_qnt} Elfs carrying the most calories are");
+
+    for elf in &elfs[0..top_qnt] {
+        println!("{:?}", elf);
+        sum_calories += elf.calories();
     }
 
-    println!("The Elf carrying the most calories is carrying a total of {} calories.", max_calories_carried);
-
+    println!("and they're carrying a total of {} calories", sum_calories);
 }
