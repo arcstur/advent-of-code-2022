@@ -41,7 +41,6 @@ impl AssignmentPair {
                 Assignment::from_str(b).unwrap(),
             );
             pairs.push(pair);
-
         }
         pairs
     }
@@ -78,11 +77,17 @@ impl AssignmentPair {
 fn main() {
     let pairs = AssignmentPair::from_file("data/input.txt");
     let count_contained = AssignmentPair::count_contained(&pairs);
-    println!("Part 1: the number of pairst that have one assignment that contains the other is {}", count_contained);
+    println!(
+        "Part 1: the number of pairst that have one assignment that contains the other is {}",
+        count_contained
+    );
 
     let pairs = AssignmentPair::from_file("data/input.txt");
     let count_overlapped = AssignmentPair::count_overlapped(&pairs);
-    println!("Part 2: the number of pairst that have one assignment that overlaps the other is {}", count_overlapped);
+    println!(
+        "Part 2: the number of pairst that have one assignment that overlaps the other is {}",
+        count_overlapped
+    );
 }
 
 #[cfg(test)]
@@ -91,20 +96,20 @@ mod tests {
 
     #[test]
     fn contains() {
-        assert!(Assignment{start: 0, end: 0}.contains(&Assignment{start: 0, end: 0}));
-        assert!(Assignment{start: 3, end: 5}.contains(&Assignment{start: 3, end: 4}));
-        assert!(Assignment{start: 5, end: 10}.contains(&Assignment{start: 6, end: 9}));
-        assert!(!Assignment{start: 5, end: 6}.contains(&Assignment{start: 4, end: 6}));
-        assert!(!Assignment{start: 7, end: 8}.contains(&Assignment{start: 6, end: 8}));
+        assert!(Assignment { start: 0, end: 0 }.contains(&Assignment { start: 0, end: 0 }));
+        assert!(Assignment { start: 3, end: 5 }.contains(&Assignment { start: 3, end: 4 }));
+        assert!(Assignment { start: 5, end: 10 }.contains(&Assignment { start: 6, end: 9 }));
+        assert!(!Assignment { start: 5, end: 6 }.contains(&Assignment { start: 4, end: 6 }));
+        assert!(!Assignment { start: 7, end: 8 }.contains(&Assignment { start: 6, end: 8 }));
     }
 
     #[test]
     fn overlaps() {
-        assert!(Assignment{start: 0, end: 0}.overlaps(&Assignment{start: 0, end: 0}));
-        assert!(Assignment{start: 3, end: 5}.overlaps(&Assignment{start: 3, end: 4}));
-        assert!(Assignment{start: 5, end: 10}.overlaps(&Assignment{start: 6, end: 9}));
-        assert!(Assignment{start: 5, end: 6}.overlaps(&Assignment{start: 4, end: 6}));
-        assert!(Assignment{start: 7, end: 8}.overlaps(&Assignment{start: 6, end: 8}));
+        assert!(Assignment { start: 0, end: 0 }.overlaps(&Assignment { start: 0, end: 0 }));
+        assert!(Assignment { start: 3, end: 5 }.overlaps(&Assignment { start: 3, end: 4 }));
+        assert!(Assignment { start: 5, end: 10 }.overlaps(&Assignment { start: 6, end: 9 }));
+        assert!(Assignment { start: 5, end: 6 }.overlaps(&Assignment { start: 4, end: 6 }));
+        assert!(Assignment { start: 7, end: 8 }.overlaps(&Assignment { start: 6, end: 8 }));
     }
 
     fn test_path() -> &'static str {
