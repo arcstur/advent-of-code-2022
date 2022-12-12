@@ -8,7 +8,7 @@ mod rsack {
         'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     ];
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct Rucksack {
         items: Vec<char>,
     }
@@ -74,6 +74,55 @@ mod rsack {
 
             rucksacks
         }
+
+        pub fn groups_from_file(path: &str, groups_of: usize) -> Vec<Vec<Rucksack>> {
+            let file = File::open(path).expect("Input file should exist");
+            let reader = BufReader::new(file);
+
+            let mut rucksack_groups: Vec<Vec<Rucksack>> = Vec::new();
+            let mut rucksacks: Vec<Rucksack> = Vec::new();
+
+            for (i, line) in reader.lines().enumerate() {
+                let line = line.expect("Lines should be readable");
+
+                rucksacks.push(Rucksack::from(line.chars().collect()));
+
+                if i % groups_of == (groups_of - 1) {
+                    rucksack_groups.push(rucksacks.clone());
+                    rucksacks.clear();
+                }
+            }
+
+            rucksack_groups
+
+        }
+
+        fn group_shared_chars(group: &Vec<Rucksack>) -> Vec<char> {
+            let mut shared: Vec<char> = Vec::new();
+            for chr in &group[0].items {
+                let mut is_shared = group[1].items.contains(chr);
+
+                for rucksack in group {
+                    is_shared &= rucksack.items.contains(chr)
+                }
+
+                if is_shared && !shared.contains(chr) {
+                    shared.push(chr.to_owned());
+                }
+            }
+            shared
+        }
+
+        pub fn group_priority(group: &Vec<Rucksack>) -> Option<u64> {
+            let shared = Rucksack::group_shared_chars(&group);
+            let mut priority = 0;
+
+            for chr in &shared {
+                // Will propagate None if it appears
+                priority += Rucksack::char_priority(chr)?;
+            }
+            Some(priority)
+        }
     }
 
     #[cfg(test)]
@@ -117,6 +166,19 @@ mod rsack {
         fn char_without_priority() {
             Rucksack::char_priority(&'*').unwrap();
         }
+
+        #[test]
+        fn group_shared_chars() {
+            let group = vec![
+                Rucksack::from(vec!['a', 'b', 'c', 'd']),
+                Rucksack::from(vec!['b', 'c', 'd']),
+                Rucksack::from(vec!['a', 'b']),
+                Rucksack::from(vec!['b', 'e', 'f', 'g']),
+            ];
+
+            assert_eq!(Rucksack::group_shared_chars(&group), vec!['b']);
+
+        }
     }
 }
 
@@ -134,6 +196,19 @@ fn main() {
 
     println!(
         "Part 1: The sum of the rucksacks' priorities is {}",
+        priorities
+    );
+
+
+    let rucksack_groups = Rucksack::groups_from_file("input.txt", 3);
+    let mut priorities = 0;
+    for group in &rucksack_groups {
+        priorities += Rucksack::group_priority(group)
+            .expect("Every rucksack group in the input file should have a priority");
+    }
+
+    println!(
+        "Part 2: The sum of the rucksack groups' priorities is {}",
         priorities
     );
 }
@@ -157,5 +232,18 @@ mod tests {
         }
 
         assert_eq!(priorities, 157);
+    }
+
+    #[test]
+    fn part2() {
+        let rucksack_groups = Rucksack::groups_from_file(test_path(), 3);
+        let mut priorities = 0;
+        for group in &rucksack_groups {
+            println!("{:?}", group);
+            priorities += Rucksack::group_priority(group)
+                .expect("Every rucksack group in the input file should have a priority");
+        }
+
+        assert_eq!(priorities, 70);
     }
 }
