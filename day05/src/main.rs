@@ -38,11 +38,15 @@ struct NoMoreCrates;
 #[derive(Debug)]
 struct Ship {
     stacks: Vec<Stack>,
+    move_many_at_once: bool,
 }
 
 impl Ship {
     fn new() -> Ship {
-        Ship { stacks: Vec::new() }
+        Ship {
+            stacks: Vec::new(),
+            move_many_at_once: false,
+        }
     }
 
     fn from_str(string: &str) -> Ship {
@@ -72,6 +76,13 @@ impl Ship {
         ship
     }
 
+    fn crate_mover_9001_from_str(string: &str) -> Ship {
+        let mut ship = Ship::from_str(string);
+        ship.move_many_at_once = true;
+        ship
+    }
+
+    #[cfg(test)]
     fn on_top(&self, idx: usize) -> Option<&Crate> {
         let stack = self.stacks.get(idx)?;
         stack.on_top()
@@ -94,8 +105,23 @@ impl Ship {
     }
 
     fn move_crates(&mut self, repeat: u8, from: usize, to: usize) -> Result<(), NoMoreCrates> {
-        for _ in 0..repeat {
-            self.move_crate(from, to)?;
+        if !self.move_many_at_once {
+            for _ in 0..repeat {
+                self.move_crate(from, to)?;
+            }
+        } else {
+            // Create temporary stack
+            self.stacks.push(Stack::new());
+            let last_index = self.stacks.len() - 1;
+
+            for _ in 0..repeat {
+                self.move_crate(from, last_index)?;
+            }
+            for _ in 0..repeat {
+                self.move_crate(last_index, to)?;
+            }
+
+            self.stacks.pop();
         }
         Ok(())
     }
@@ -135,6 +161,14 @@ fn main() {
     ship.move_crates_from_commands(&string).unwrap();
 
     println!("The crates on top are {}", ship.crates_on_top_as_string());
+
+    let mut ship = Ship::crate_mover_9001_from_str(&string);
+    ship.move_crates_from_commands(&string).unwrap();
+
+    println!(
+        "(Crate Mover 9001) The crates on top are {}",
+        ship.crates_on_top_as_string()
+    );
 }
 
 #[cfg(test)]
@@ -249,5 +283,15 @@ mod tests {
         ship.move_crates_from_commands(&string).unwrap();
 
         assert_eq!(ship.crates_on_top_as_string(), "CMZ");
+    }
+
+    #[test]
+    fn part2() {
+        let string = fs::read_to_string("data/test-input.txt").unwrap();
+
+        let mut ship = Ship::crate_mover_9001_from_str(&string);
+        ship.move_crates_from_commands(&string).unwrap();
+
+        assert_eq!(ship.crates_on_top_as_string(), "MCD");
     }
 }
