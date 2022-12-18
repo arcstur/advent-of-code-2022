@@ -1,4 +1,3 @@
-#![allow(unused)]
 use std::fs;
 
 mod tree;
@@ -12,6 +11,11 @@ fn main() -> Result<(), Error> {
     println!(
         "The numbe of visible trees is: {}",
         grid.visible_trees().unwrap()
+    );
+
+    println!(
+        "The highest scenic score possible is: {}",
+        grid.max_scenic_score().unwrap()
     );
 
     Ok(())
