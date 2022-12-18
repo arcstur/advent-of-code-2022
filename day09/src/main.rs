@@ -1,4 +1,3 @@
-#![allow(unused)]
 use std::fs;
 use std::io::Error;
 
@@ -13,6 +12,18 @@ fn main() -> Result<(), Error> {
         "The tail visited, at least once, {} positions",
         history.tail_unique_positions()
     );
+
+    assert_eq!(history.tail_unique_positions(), 6023);
+
+    let knot_count = 10;
+    let history = RopeHistory::from_input_with(&string, knot_count).unwrap();
+    println!(
+        "With {} knots, however, the tail visited, at least once, {} positions",
+        knot_count,
+        history.tail_unique_positions()
+    );
+
+    assert_eq!(history.tail_unique_positions(), 2533);
 
     Ok(())
 }
